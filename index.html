@@ -444,6 +444,82 @@ select option { background: var(--bg3); }
 }
 .toggle-opt.active { background: var(--bg4); color: var(--text); border: 1px solid var(--border2); }
 
+/* MONTH CALENDAR */
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+  margin: 8px 0 4px;
+}
+.month-day-name {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text3);
+  text-align: center;
+  padding: 2px 0 4px;
+}
+.month-day {
+  aspect-ratio: 1;
+  border-radius: 5px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text3);
+  position: relative;
+  transition: transform 0.1s;
+}
+.month-day.empty { background: transparent; border-color: transparent; }
+.month-day.today { outline: 1.5px solid var(--accent2); outline-offset: 1px; color: var(--accent); }
+.month-day.score-high { background: rgba(92,184,138,0.25); border-color: rgba(92,184,138,0.4); color: #5cb88a; }
+.month-day.score-mid  { background: rgba(232,213,163,0.2); border-color: rgba(232,213,163,0.35); color: var(--accent2); }
+.month-day.score-low  { background: rgba(224,91,75,0.18); border-color: rgba(224,91,75,0.3); color: var(--red); }
+.month-day.no-log     { background: var(--bg3); border-color: var(--border); color: var(--text3); }
+.month-legend { display: flex; gap: 10px; margin-top: 8px; align-items: center; }
+.legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+.legend-lbl { font-family: var(--font-mono); font-size: 9px; color: var(--text3); }
+
+/* COACH CARD */
+.coach-day {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.coach-day-name {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+  min-width: 28px;
+  padding-top: 2px;
+}
+.coach-day-content { flex: 1; }
+.coach-session-name { font-size: 13px; color: var(--text); font-weight: 500; }
+.coach-session-detail { font-size: 11px; color: var(--text3); margin-top: 2px; line-height: 1.5; }
+.coach-day.rest .coach-session-name { color: var(--text3); font-weight: 400; }
+.coach-day.run  { border-left: 2px solid var(--teal); }
+.coach-day.gym  { border-left: 2px solid var(--coral); }
+.coach-day.football { border-left: 2px solid var(--blue); }
+.coach-day.rest { border-left: 2px solid var(--border2); }
+.coach-remark {
+  background: rgba(232,213,163,0.07);
+  border: 1px solid rgba(232,213,163,0.15);
+  border-radius: var(--r-sm);
+  padding: 10px 12px;
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.6;
+  margin-bottom: 12px;
+  font-style: italic;
+}
+
 /* PHASE TIMELINE */
 .phase-row { display: flex; gap: 6px; margin-bottom: 12px; }
 .phase-block {
@@ -576,6 +652,22 @@ select option { background: var(--bg3); }
     <div class="hr"></div>
     <div id="week-stats-home"></div>
   </div>
+
+  <div class="sec-label">This month</div>
+  <div class="card">
+    <div class="card-head">
+      <div class="card-icon" style="background:rgba(92,184,138,0.1);">🗓️</div>
+      <div><div class="card-title" id="month-card-title">Month at a glance</div><div class="card-sub" id="month-card-sub">Loading...</div></div>
+    </div>
+    <div class="month-grid" id="month-day-names"></div>
+    <div class="month-grid" id="month-grid"></div>
+    <div class="month-legend">
+      <div class="legend-dot" style="background:rgba(92,184,138,0.4);"></div><div class="legend-lbl">5–6 checks</div>
+      <div class="legend-dot" style="background:rgba(232,213,163,0.4);"></div><div class="legend-lbl">3–4 checks</div>
+      <div class="legend-dot" style="background:rgba(224,91,75,0.3);"></div><div class="legend-lbl">1–2 checks</div>
+      <div class="legend-dot" style="background:var(--bg3);border:1px solid var(--border);"></div><div class="legend-lbl">No log</div>
+    </div>
+  </div>
 </div>
 
 <!-- FITNESS -->
@@ -674,9 +766,18 @@ select option { background: var(--bg3); }
     </div>
     <div id="weekly-fitness-summary"></div>
   </div>
-</div>
 
-<!-- ACADEMICS -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-icon" style="background:rgba(232,213,163,0.1);">🤖</div>
+      <div><div class="card-title">Workout coach</div><div class="card-sub">Personalised week plan · rule-based</div></div>
+      <button class="btn btn-ghost btn-sm" style="margin-left:auto;" onclick="generatePlan()">Generate ↗</button>
+    </div>
+    <div id="coach-output">
+      <div style="color:var(--text3);font-size:12px;padding:8px 0;">Tap Generate to get your personalised week plan based on your logged data and current phase.</div>
+    </div>
+  </div>
+</div>
 <div class="screen" id="screen-academics">
   <div class="sec-label">Academics + Projects</div>
 
@@ -1248,7 +1349,229 @@ function renderWeekStatsHome() {
   </div>`;
 }
 
-// ── HOME RENDER ──────────────────────────────────────────────────────
+// ── MONTH CALENDAR ──────────────────────────────────────────────────────
+function renderMonthCalendar() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const today = todayKey();
+
+  const titleEl = document.getElementById('month-card-title');
+  const subEl = document.getElementById('month-card-sub');
+  if(titleEl) titleEl.textContent = now.toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+
+  // Days in month, first day offset
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const firstDow = new Date(year, month, 1).getDay(); // 0=Sun
+  const daysLogged = [];
+  let highCount = 0, totalLogged = 0;
+  for(let d=1; d<=daysInMonth; d++){
+    const key = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const log = load('log_'+key, {});
+    const score = CHECKS.filter(c=>log[c.id]).length;
+    daysLogged.push({key, score, hasLog: log.savedAt || score > 0});
+    if(score > 0) { totalLogged++; if(score >= 5) highCount++; }
+  }
+  if(subEl) subEl.textContent = `${totalLogged} days logged · ${highCount} full days`;
+
+  // Day name headers
+  const namesEl = document.getElementById('month-day-names');
+  if(namesEl) namesEl.innerHTML = ['S','M','T','W','T','F','S'].map(n=>`<div class="month-day-name">${n}</div>`).join('');
+
+  // Grid
+  const gridEl = document.getElementById('month-grid');
+  if(!gridEl) return;
+  let html = '';
+  // Empty cells before first day
+  for(let i=0; i<firstDow; i++) html += `<div class="month-day empty"></div>`;
+  daysLogged.forEach((d, i) => {
+    const dayNum = i+1;
+    const isToday = d.key === today;
+    let cls = 'no-log';
+    if(d.hasLog || d.score > 0) {
+      if(d.score >= 5) cls = 'score-high';
+      else if(d.score >= 3) cls = 'score-mid';
+      else if(d.score >= 1) cls = 'score-low';
+    }
+    html += `<div class="month-day ${cls} ${isToday?'today':''}">${dayNum}</div>`;
+  });
+  gridEl.innerHTML = html;
+}
+
+// ── WORKOUT COACH ────────────────────────────────────────────────────────
+function generatePlan() {
+  const el = document.getElementById('coach-output');
+  if(!el) return;
+  el.innerHTML = '<div style="color:var(--text3);font-size:12px;padding:8px 0;">Analysing your data...</div>';
+
+  // Gather context
+  const now = new Date();
+  const month = now.getMonth();
+  let phase = 'foundation';
+  if(month >= 7 && month <= 8) phase = 'build';
+  else if(month >= 9) phase = 'peak';
+
+  const workouts = load('workouts', []);
+  const days = getWeekDays(); // Sun-Sat this week
+  const weekWorkouts = workouts.filter(w => days.includes(w.date.split('T')[0]));
+  const gymDone = weekWorkouts.filter(w=>w.type==='gym').map(w=>w.date.split('T')[0]);
+  const runsDone = weekWorkouts.filter(w=>w.type==='run').map(w=>({date:w.date.split('T')[0],dist:w.dist||0}));
+  const footballDone = weekWorkouts.filter(w=>w.type==='football').map(w=>w.date.split('T')[0]);
+
+  // Derive run progression
+  const allRuns = workouts.filter(w=>w.type==='run');
+  const recentRuns = allRuns.slice(0,6);
+  const avgDist = recentRuns.length ? recentRuns.reduce((s,r)=>s+(r.dist||0),0)/recentRuns.length : 3;
+  const longestRun = allRuns.length ? Math.max(...allRuns.map(r=>r.dist||0)) : 0;
+  // next run distances
+  const easyDist = Math.max(3, +(avgDist * 0.85).toFixed(1));
+  const tempoDist = Math.max(3, +(avgDist * 0.9).toFixed(1));
+  const longDist = phase==='foundation' ? Math.min(+(longestRun*1.1+0.5).toFixed(1), 6)
+                 : phase==='build'      ? Math.min(+(longestRun*1.1+0.5).toFixed(1), 9)
+                 :                        Math.min(+(longestRun*1.1+0.5).toFixed(1), 10);
+
+  // Gym split logic — rotate push/pull/legs
+  const lastGymTypes = workouts.filter(w=>w.type==='gym').slice(0,3).map(w=>w.gymType||'Push');
+  const gymRotation = ['Push','Pull','Legs'];
+  function nextGymType(done) {
+    const lastDone = done.length > 0 ? lastGymTypes[0] : null;
+    if(!lastDone) return 'Push';
+    const idx = gymRotation.indexOf(lastDone);
+    return gymRotation[(idx+1)%3];
+  }
+
+  // Phase-specific targets
+  const phaseTargets = {
+    foundation: { gymPerWeek: 3, runsPerWeek: 2, runTypes: ['easy','easy'], note: 'Foundation phase — build base fitness. Keep intensity moderate, focus on consistency over performance.' },
+    build:      { gymPerWeek: 3, runsPerWeek: 3, runTypes: ['easy','tempo','long'], note: 'Build phase — progressive overload on gym. Mix easy + tempo runs. Long run on weekend.' },
+    peak:       { gymPerWeek: 3, runsPerWeek: 3, runTypes: ['tempo','easy','long'], note: 'Peak phase — maintain strength, prioritise the long run for 10k prep. Reduce gym volume if fatigue hits.' },
+  };
+  const target = phaseTargets[phase];
+
+  // Map week days (0=Sun..6=Sat)
+  // Football is typically 6–7pm — treat day as partial active
+  const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const shortDayKeys = days; // array of 7 ISO dates
+
+  // Build plan: assign sessions intelligently
+  // Rules:
+  // 1. No gym the day after a hard gym session
+  // 2. No hard run day-after-gym (easy run ok)
+  // 3. Football day = active recovery, no heavy gym
+  // 4. At least 1 rest day
+  // 5. Long run on Sat or Sun
+  // 6. Already-done days are marked as done
+
+  const todayDow = now.getDay(); // 0=Sun
+  const plan = [];
+  let gymAssigned = [...gymDone]; // dates already with gym
+  let runsAssigned = [...runsDone.map(r=>r.date)];
+  let gymCount = gymDone.length;
+  let runCount = runsDone.length;
+  let gymTypeIdx = gymRotation.indexOf(nextGymType(gymDone)) ;
+
+  // Decide football days — use logged football or default Wed+weekend
+  const footballDays = footballDone.length > 0 ? footballDone : [];
+
+  for(let i=0; i<7; i++){
+    const dateKey = days[i];
+    const dow = i; // 0=Sun within week array (since getWeekDays starts Sun)
+    const isPast = dateKey < todayKey();
+    const isToday2 = dateKey === todayKey();
+    const hasDoneGym = gymDone.includes(dateKey);
+    const hasDoneRun = runsDone.map(r=>r.date).includes(dateKey);
+    const hasDoneFootball = footballDone.includes(dateKey);
+    const prevDayGym = i > 0 && gymAssigned.includes(days[i-1]);
+
+    if(hasDoneGym || hasDoneRun || hasDoneFootball) {
+      // Already done
+      const dtype = hasDoneGym ? 'gym' : hasDoneRun ? 'run' : 'football';
+      const dworkout = hasDoneGym ? workouts.find(w=>w.type==='gym'&&w.date.split('T')[0]===dateKey)
+                     : hasDoneRun ? workouts.find(w=>w.type==='run'&&w.date.split('T')[0]===dateKey)
+                     : workouts.find(w=>w.type==='football'&&w.date.split('T')[0]===dateKey);
+      plan.push({
+        dow, dateKey, dayName: dayNames[dow],
+        type: dtype,
+        name: hasDoneGym ? `Gym — ${dworkout?.gymType||'session'} ✓`
+             : hasDoneRun ? `Run — ${dworkout?.dist||'?'}km ${dworkout?.runType||''} ✓`
+             : 'Football ✓',
+        detail: 'Logged',
+        done: true,
+      });
+      if(hasDoneGym) gymAssigned.push(dateKey);
+      continue;
+    }
+
+    if(isPast) {
+      plan.push({ dow, dateKey, dayName: dayNames[dow], type:'rest', name:'Rest / missed', detail:'Past day — not logged', done:false });
+      continue;
+    }
+
+    // Future or today — assign
+    // Weekend preference: long run on Sat (dow=6) or Sun (dow=0)
+    const isWeekend = dow === 0 || dow === 6;
+    const isFootballDay = dow === 3; // Wed default if none logged
+
+    if(isFootballDay && footballDone.length === 0) {
+      plan.push({ dow, dateKey, dayName: dayNames[dow], type:'football', name:'Football — evening 6–7pm', detail:'Active recovery day. Skip gym. Light stretch after.' });
+      continue;
+    }
+
+    // Long run on Saturday if not yet done and build/peak phase
+    if(dow === 6 && runCount < target.runsPerWeek && (phase==='build'||phase==='peak') && longestRun < 9) {
+      plan.push({ dow, dateKey, dayName: dayNames[dow], type:'run', name:`Long run — ${longDist} km`, detail:`Slow pace (6:30–7:00/km). This is your longest run this week. No gym today.` });
+      runsAssigned.push(dateKey); runCount++;
+      continue;
+    }
+
+    // Assign gym (max 3, no back-to-back heavy)
+    if(gymCount < target.gymPerWeek && !prevDayGym && !isWeekend) {
+      const gtype = gymRotation[gymTypeIdx % 3];
+      const gymDetails = {
+        Push: 'Chest · Shoulders · Triceps — 4×8–10 reps. Bench, OHP, lateral raises, tricep pushdown.',
+        Pull: 'Back · Biceps — 4×8–10 reps. Pull-ups / rows, lat pulldown, face pulls, bicep curls.',
+        Legs: 'Quads · Hamstrings · Glutes — Squats, Romanian deadlift, leg press, calf raises. 4×8–10.',
+      };
+      plan.push({ dow, dateKey, dayName: dayNames[dow], type:'gym', name:`Gym — ${gtype}`, detail: gymDetails[gtype] });
+      gymAssigned.push(dateKey); gymCount++; gymTypeIdx++;
+      continue;
+    }
+
+    // Assign runs
+    if(runCount < target.runsPerWeek) {
+      const rtype = target.runTypes[runCount] || 'easy';
+      const rdist = rtype==='easy' ? easyDist : rtype==='tempo' ? tempoDist : longDist;
+      const rpace = rtype==='easy' ? '6:30–7:00/km, conversational pace' : rtype==='tempo' ? '5:40–6:00/km, comfortably hard' : '6:30–7:00/km, slow and steady';
+      plan.push({ dow, dateKey, dayName: dayNames[dow], type:'run', name:`${rtype.charAt(0).toUpperCase()+rtype.slice(1)} run — ${rdist} km`, detail: rpace });
+      runsAssigned.push(dateKey); runCount++;
+      continue;
+    }
+
+    // Rest
+    plan.push({ dow, dateKey, dayName: dayNames[dow], type:'rest', name:'Rest day', detail:'Recovery is training. Stretch, walk, hydrate.' });
+  }
+
+  // Render
+  const typeClass = { gym:'gym', run:'run', football:'football', rest:'rest' };
+  const phaseLabel = { foundation:'Foundation', build:'Build', peak:'Peak' };
+  let html = `<div class="coach-remark">${target.note}</div>`;
+  plan.forEach(p => {
+    const opacity = p.done ? 'opacity:0.5;' : '';
+    html += `<div class="coach-day ${typeClass[p.type]||'rest'}" style="${opacity}">
+      <div class="coach-day-name">${p.dayName}</div>
+      <div class="coach-day-content">
+        <div class="coach-session-name">${p.name}</div>
+        <div class="coach-session-detail">${p.detail}</div>
+      </div>
+    </div>`;
+  });
+  html += `<div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
+    Phase: ${phaseLabel[phase]} · Gym target: ${target.gymPerWeek}/wk · Runs: ${target.runsPerWeek}/wk · Based on ${allRuns.length} logged runs
+  </div>`;
+  el.innerHTML = html;
+}
+
+// ── MONTH CALENDAR ──────────────────────────────────────────────────────
 function renderHome() {
   const now = new Date();
   const h = now.getHours();
@@ -1280,6 +1603,7 @@ function renderHome() {
   renderTodayChecks();
   renderWeekGrid();
   renderWeekStatsHome();
+  renderMonthCalendar();
 }
 
 // ── WORKOUT FORMS ──────────────────────────────────────────────────────
