@@ -63,15 +63,15 @@ nav {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
-  padding: 8px 4px 6px;
+  gap: 2px;
+  padding: 7px 2px 5px;
   background: none;
   border: none;
   color: var(--text3);
   font-family: var(--font-body);
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 500;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.02em;
   cursor: pointer;
   transition: color 0.15s;
   border-radius: var(--r-sm);
@@ -520,6 +520,128 @@ select option { background: var(--bg3); }
   font-style: italic;
 }
 
+/* STREAK STRIP */
+.streak-strip {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 4px;
+}
+.streak-tile {
+  flex: 1;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 10px 10px 8px;
+  text-align: center;
+}
+.streak-tile-val {
+  font-family: var(--font-head);
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+}
+.streak-tile-val.green { color: var(--green); }
+.streak-tile-val.amber { color: var(--accent2); }
+.streak-tile-val.red   { color: var(--red); }
+.streak-tile-lbl {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text3);
+  margin-top: 3px;
+  letter-spacing: 0.04em;
+}
+.streak-tile-icon { font-size: 13px; margin-bottom: 3px; }
+
+/* TODO */
+.todo-input-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  align-items: center;
+}
+.todo-input-row input {
+  flex: 1;
+}
+.todo-add-btn {
+  background: var(--accent2);
+  color: #0c0c0c;
+  border: none;
+  border-radius: var(--r-sm);
+  font-size: 18px;
+  font-weight: 700;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+}
+.todo-add-btn:active { opacity: 0.8; }
+.todo-bucket-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 12px 0 6px;
+}
+.todo-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+}
+.todo-item:last-child { border-bottom: none; }
+.todo-item-text {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1.4;
+}
+.todo-item-text.done {
+  color: var(--text3);
+  text-decoration: line-through;
+}
+.todo-del {
+  font-size: 14px;
+  color: var(--text3);
+  cursor: pointer;
+  padding: 2px 6px;
+  opacity: 0.5;
+  background: none;
+  border: none;
+  transition: opacity 0.15s;
+}
+.todo-del:active { opacity: 1; }
+.todo-empty {
+  font-size: 12px;
+  color: var(--text3);
+  padding: 8px 0;
+  font-family: var(--font-mono);
+}
+
+/* PACE CALC */
+.pace-result {
+  background: var(--bg3);
+  border-radius: var(--r-sm);
+  padding: 12px 14px;
+  margin-top: 10px;
+  display: none;
+}
+.pace-result.visible { display: block; }
+.pace-result-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  font-size: 12px;
+}
+.pace-result-label { color: var(--text3); font-family: var(--font-mono); }
+.pace-result-val   { color: var(--accent); font-family: var(--font-head); font-size: 15px; font-weight: 700; }
+
 /* PHASE TIMELINE */
 .phase-row { display: flex; gap: 6px; margin-bottom: 12px; }
 .phase-block {
@@ -596,21 +718,35 @@ select option { background: var(--bg3); }
     <div class="hero-title">Hey <span>Yash</span> 👋</div>
   </div>
 
-  <div class="phase-row" style="padding: 0 0; margin: 12px 0 4px;">
+  <div class="phase-row" style="margin: 12px 0 4px;">
     <div class="phase-block current">
-      <div class="phase-num-sm">Current phase</div>
+      <div class="phase-num-sm">Phase</div>
       <div class="phase-name-sm" id="current-phase-name">Foundation</div>
-      <div class="phase-weeks-sm" id="current-phase-weeks">Jul — build the base</div>
+      <div class="phase-weeks-sm" id="current-phase-weeks">Jul</div>
     </div>
     <div class="phase-block">
-      <div class="phase-num-sm">10k target</div>
+      <div class="phase-num-sm">10k goal</div>
       <div class="phase-name-sm">Dec end</div>
-      <div class="phase-weeks-sm" id="days-to-dec">counting down</div>
+      <div class="phase-weeks-sm" id="days-to-dec">—</div>
     </div>
-    <div class="phase-block">
-      <div class="phase-num-sm">Smoke-free</div>
-      <div class="phase-name-sm streak-num" id="smoke-streak-home">0 days</div>
-      <div class="phase-weeks-sm">keep going</div>
+  </div>
+
+  <div class="sec-label">Streaks</div>
+  <div class="streak-strip">
+    <div class="streak-tile">
+      <div class="streak-tile-icon">🏋️</div>
+      <div class="streak-tile-val green" id="gym-streak-val">0</div>
+      <div class="streak-tile-lbl">gym days</div>
+    </div>
+    <div class="streak-tile">
+      <div class="streak-tile-icon">📖</div>
+      <div class="streak-tile-val amber" id="reading-streak-val">0</div>
+      <div class="streak-tile-lbl">reading</div>
+    </div>
+    <div class="streak-tile">
+      <div class="streak-tile-icon">🚭</div>
+      <div class="streak-tile-val red" id="smoke-streak-home">0</div>
+      <div class="streak-tile-lbl">smoke-free</div>
     </div>
   </div>
 
@@ -629,17 +765,17 @@ select option { background: var(--bg3); }
     <div class="hr"></div>
     <div class="field-row">
       <div class="field-label">Slept at</div>
-      <input type="time" id="sleep-time" placeholder="00:00">
+      <input type="time" id="sleep-time" placeholder="00:00" onchange="autoSaveField('sleepTime',this.value)">
     </div>
     <div class="field-row">
       <div class="field-label">Woke at</div>
-      <input type="time" id="wake-time" placeholder="00:00">
+      <input type="time" id="wake-time" placeholder="00:00" onchange="autoSaveField('wakeTime',this.value)">
     </div>
     <div class="field-row">
       <div class="field-label">Intention</div>
-      <input type="text" id="daily-intention" placeholder="One thing that matters today...">
+      <input type="text" id="daily-intention" placeholder="One thing that matters today..." oninput="autoSaveField('intention',this.value)">
     </div>
-    <button class="btn" onclick="saveToday()">Save today</button>
+    <button class="btn" onclick="saveToday()">Save today ✓</button>
   </div>
 
   <div class="sec-label">This week</div>
@@ -765,6 +901,43 @@ select option { background: var(--bg3); }
       <div><div class="card-title">This week's sessions</div></div>
     </div>
     <div id="weekly-fitness-summary"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-icon" style="background:rgba(74,190,170,0.1);">⚡</div>
+      <div><div class="card-title">Pace calculator</div><div class="card-sub">Enter any run → see pace + 10k projection</div></div>
+    </div>
+    <div class="field-row">
+      <div class="field-label">Distance</div>
+      <input type="number" id="pace-dist" placeholder="km" step="0.1" min="0" oninput="calcPace()">
+    </div>
+    <div class="field-row">
+      <div class="field-label">Time</div>
+      <input type="text" id="pace-time" placeholder="mm:ss or hh:mm:ss" oninput="calcPace()">
+    </div>
+    <div class="pace-result" id="pace-result">
+      <div class="pace-result-row">
+        <div class="pace-result-label">Pace</div>
+        <div class="pace-result-val" id="pr-pace">—</div>
+      </div>
+      <div class="pace-result-row">
+        <div class="pace-result-label">Speed</div>
+        <div class="pace-result-val" id="pr-speed">—</div>
+      </div>
+      <div class="pace-result-row">
+        <div class="pace-result-label">5k projection</div>
+        <div class="pace-result-val" id="pr-5k">—</div>
+      </div>
+      <div class="pace-result-row">
+        <div class="pace-result-label">10k projection</div>
+        <div class="pace-result-val" id="pr-10k">—</div>
+      </div>
+      <div class="pace-result-row" id="pr-gap-row">
+        <div class="pace-result-label">vs 10k target</div>
+        <div class="pace-result-val" id="pr-gap">—</div>
+      </div>
+    </div>
   </div>
 
   <div class="card">
@@ -1158,6 +1331,56 @@ select option { background: var(--bg3); }
   </div>
 </div>
 
+<!-- TODO -->
+<div class="screen" id="screen-todo">
+  <div class="sec-label">Tasks + Reminders</div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-icon" style="background:rgba(91,155,213,0.1);">✅</div>
+      <div><div class="card-title">Add task</div></div>
+    </div>
+    <div class="todo-input-row">
+      <input type="text" id="todo-input" placeholder="What needs doing..." onkeydown="if(event.key==='Enter')addTodo()">
+      <button class="todo-add-btn" onclick="addTodo()">+</button>
+    </div>
+    <div class="field-row" style="padding-top:0; border-bottom:none;">
+      <div class="field-label">Bucket</div>
+      <select id="todo-bucket">
+        <option value="today">Today</option>
+        <option value="week">This Week</option>
+        <option value="someday">Someday</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-icon" style="background:rgba(224,91,75,0.1);">🔥</div>
+      <div><div class="card-title">Today</div></div>
+      <div style="margin-left:auto;font-family:var(--font-mono);font-size:11px;color:var(--text3);" id="today-todo-count">0</div>
+    </div>
+    <div id="todo-list-today"><div class="todo-empty">Nothing for today. Add something above.</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-icon" style="background:rgba(155,127,212,0.1);">📅</div>
+      <div><div class="card-title">This week</div></div>
+      <div style="margin-left:auto;font-family:var(--font-mono);font-size:11px;color:var(--text3);" id="week-todo-count">0</div>
+    </div>
+    <div id="todo-list-week"><div class="todo-empty">Nothing this week yet.</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-icon" style="background:rgba(74,190,170,0.1);">🌱</div>
+      <div><div class="card-title">Someday</div><div class="card-sub">Ideas, future goals, backlog</div></div>
+    </div>
+    <div id="todo-list-someday"><div class="todo-empty">Nothing in the backlog.</div></div>
+  </div>
+</div>
+
 <!-- NAV -->
 <nav>
   <button class="nav-btn active" onclick="showScreen('home',this)">
@@ -1174,6 +1397,9 @@ select option { background: var(--bg3); }
   </button>
   <button class="nav-btn" onclick="showScreen('health',this)">
     <span class="nav-icon">💪</span>Health
+  </button>
+  <button class="nav-btn" onclick="showScreen('todo',this)">
+    <span class="nav-icon">✅</span>Tasks
   </button>
   <button class="nav-btn" onclick="showScreen('review',this)">
     <span class="nav-icon">⭐</span>Review
@@ -1225,12 +1451,132 @@ function showScreen(name, btn) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('screen-'+name).classList.add('active');
   if(btn) btn.classList.add('active');
-  if(name==='home') renderHome();
-  if(name==='fitness') renderFitness();
-  if(name==='academics') renderAcademics();
-  if(name==='marketing') renderMarketing();
-  if(name==='health') renderHealth();
-  if(name==='review') renderReview();
+  if(name==='home')       renderHome();
+  if(name==='fitness')    renderFitness();
+  if(name==='academics')  renderAcademics();
+  if(name==='marketing')  renderMarketing();
+  if(name==='health')     renderHealth();
+  if(name==='review')     renderReview();
+  if(name==='todo')       renderTodos();
+}
+
+// ── PACE CALCULATOR ────────────────────────────────────────────────────
+function calcPace() {
+  const distEl = document.getElementById('pace-dist');
+  const timeEl = document.getElementById('pace-time');
+  const result = document.getElementById('pace-result');
+  if(!distEl || !timeEl || !result) return;
+
+  const dist = parseFloat(distEl.value);
+  const timeStr = timeEl.value.trim();
+  if(!dist || !timeStr) { result.classList.remove('visible'); return; }
+
+  // Parse mm:ss or hh:mm:ss
+  const parts = timeStr.split(':').map(Number);
+  let totalSecs = 0;
+  if(parts.length === 2) totalSecs = parts[0]*60 + parts[1];
+  else if(parts.length === 3) totalSecs = parts[0]*3600 + parts[1]*60 + parts[2];
+  else { result.classList.remove('visible'); return; }
+  if(!totalSecs || isNaN(totalSecs)) { result.classList.remove('visible'); return; }
+
+  const secsPerKm = totalSecs / dist;
+  const paceMin = Math.floor(secsPerKm / 60);
+  const paceSec = Math.round(secsPerKm % 60);
+  const speedKph = (dist / totalSecs * 3600).toFixed(1);
+
+  const fmt = secs => {
+    const h = Math.floor(secs/3600);
+    const m = Math.floor((secs%3600)/60);
+    const s = Math.round(secs%60);
+    if(h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    return `${m}:${String(s).padStart(2,'0')}`;
+  };
+
+  const proj5k  = secsPerKm * 5;
+  const proj10k = secsPerKm * 10;
+
+  // Target 10k = 26 min = 1560 secs. Gap
+  const target10kSecs = 26 * 60;
+  const gap = proj10k - target10kSecs;
+  const gapStr = gap > 0
+    ? `+${fmt(gap)} over target`
+    : gap < 0
+    ? `${fmt(Math.abs(gap))} under target 🎯`
+    : 'Exactly on target!';
+
+  document.getElementById('pr-pace').textContent  = `${paceMin}:${String(paceSec).padStart(2,'0')} /km`;
+  document.getElementById('pr-speed').textContent = `${speedKph} km/h`;
+  document.getElementById('pr-5k').textContent    = fmt(proj5k);
+  document.getElementById('pr-10k').textContent   = fmt(proj10k);
+  document.getElementById('pr-gap').textContent   = gapStr;
+  document.getElementById('pr-gap').style.color   = gap <= 0 ? 'var(--green)' : gap < 300 ? 'var(--accent2)' : 'var(--red)';
+  result.classList.add('visible');
+}
+
+// ── TODO ENGINE ────────────────────────────────────────────────────────
+function getTodos() { return load('todos', []); }
+function saveTodos(todos) { save('todos', todos); }
+
+function addTodo() {
+  const input = document.getElementById('todo-input');
+  const bucket = document.getElementById('todo-bucket');
+  if(!input || !input.value.trim()) { toast('Type a task first'); return; }
+  const todos = getTodos();
+  todos.unshift({
+    id: Date.now(),
+    text: input.value.trim(),
+    bucket: bucket.value,
+    done: false,
+    created: new Date().toISOString(),
+  });
+  saveTodos(todos);
+  input.value = '';
+  toast('Task added ✓');
+  renderTodos();
+}
+
+function toggleTodo(id) {
+  const todos = getTodos();
+  const t = todos.find(t => t.id === id);
+  if(t) t.done = !t.done;
+  saveTodos(todos);
+  renderTodos();
+}
+
+function deleteTodo(id) {
+  const todos = getTodos().filter(t => t.id !== id);
+  saveTodos(todos);
+  renderTodos();
+}
+
+function renderTodos() {
+  const todos = getTodos();
+  const buckets = ['today','week','someday'];
+  const labels = { today:'Today', week:'This Week', someday:'Someday' };
+  const emptyMsg = { today:'Nothing for today. Add something above.', week:'Nothing this week yet.', someday:'Nothing in the backlog.' };
+
+  buckets.forEach(bucket => {
+    const items = todos.filter(t => t.bucket === bucket);
+    const el = document.getElementById('todo-list-'+bucket);
+    const countEl = document.getElementById(bucket+'-todo-count');
+    if(countEl) {
+      const remaining = items.filter(t=>!t.done).length;
+      countEl.textContent = remaining > 0 ? remaining+' left' : items.length ? 'all done ✓' : '';
+    }
+    if(!el) return;
+    if(!items.length) {
+      el.innerHTML = `<div class="todo-empty">${emptyMsg[bucket]}</div>`;
+      return;
+    }
+    // Sort: undone first, then done
+    const sorted = [...items.filter(t=>!t.done), ...items.filter(t=>t.done)];
+    el.innerHTML = sorted.map(t => `
+      <div class="todo-item">
+        <div class="checkbox ${t.done?'checked':''}" onclick="toggleTodo(${t.id})" style="cursor:pointer;">${t.done?'✓':''}</div>
+        <div class="todo-item-text ${t.done?'done':''}">${t.text}</div>
+        <button class="todo-del" onclick="deleteTodo(${t.id})">✕</button>
+      </div>`).join('');
+  });
 }
 
 // ── TODAY CHECKS ────────────────────────────────────────────────────────
@@ -1275,6 +1621,13 @@ function toggleCheck(id) {
   saveTodayLog(log);
   renderTodayChecks();
 }
+function autoSaveField(field, value) {
+  const log = getTodayLog();
+  log[field] = value;
+  log.savedAt = new Date().toISOString();
+  saveTodayLog(log);
+}
+
 function saveToday() {
   const log = getTodayLog();
   const si = document.getElementById('sleep-time');
@@ -1289,22 +1642,37 @@ function saveToday() {
   updateSmokeStreak();
 }
 
-// ── SMOKE STREAK ──────────────────────────────────────────────────────
-function updateSmokeStreak() {
+// ── STREAKS ────────────────────────────────────────────────────────────
+function calcStreak(checkFn, days = 90) {
   let streak = 0;
   const today = new Date();
-  for(let i=0;i<365;i++){
+  for(let i = 0; i < days; i++){
     const d = new Date(today);
-    d.setDate(today.getDate()-i);
+    d.setDate(today.getDate() - i);
     const key = d.toISOString().split('T')[0];
-    const log = load('log_'+key, {});
-    if(log.nosmoke) streak++;
-    else if(i>0) break;
+    const log = load('log_' + key, {});
+    if(checkFn(log)) streak++;
+    else if(i > 0) break;
   }
-  save('smoke_streak', streak);
-  const el = document.getElementById('smoke-streak-home');
-  if(el) el.textContent = streak+' days';
   return streak;
+}
+
+function updateSmokeStreak() {
+  const smokeStreak   = calcStreak(l => !!l.nosmoke);
+  const gymStreak     = calcStreak(l => !!l.gym);
+  const readingStreak = calcStreak(l => !!l.substack);
+
+  save('smoke_streak', smokeStreak);
+
+  const smokeEl   = document.getElementById('smoke-streak-home');
+  const gymEl     = document.getElementById('gym-streak-val');
+  const readingEl = document.getElementById('reading-streak-val');
+
+  if(smokeEl)   smokeEl.textContent   = smokeStreak;
+  if(gymEl)     gymEl.textContent     = gymStreak;
+  if(readingEl) readingEl.textContent = readingStreak;
+
+  return smokeStreak;
 }
 
 // ── WEEK GRID ────────────────────────────────────────────────────────
