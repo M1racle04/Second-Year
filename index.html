@@ -1545,18 +1545,21 @@ function calcPace() {
 function getTodos() { return load('todos', []); }
 function saveTodos(todos) { save('todos', todos); }
 
-function addTodo() {
+async function addTodo() {
   const input = document.getElementById('todo-input');
   const bucket = document.getElementById('todo-bucket');
   if(!input || !input.value.trim()) { toast('Type a task first'); return; }
   const todos = getTodos();
-  todos.unshift({
+  const newTodo = {
     id: Date.now(),
     text: input.value.trim(),
     bucket: bucket.value,
     done: false,
     created: new Date().toISOString(),
-  });
+  };
+  const sbId = await syncTodoAdd(newTodo);
+  if(sbId) { newTodo.sb_id = sbId; newTodo.id = sbId; }
+  todos.unshift(newTodo);
   saveTodos(todos);
   input.value = '';
   toast('Task added ✓');
@@ -1565,15 +1568,17 @@ function addTodo() {
 
 function toggleTodo(id) {
   const todos = getTodos();
-  const t = todos.find(t => t.id === id);
-  if(t) t.done = !t.done;
+  const t = todos.find(t => String(t.id) === String(id));
+  if(t) { t.done = !t.done; syncTodoUpdate(t.sb_id || t.id, t.done); }
   saveTodos(todos);
   renderTodos();
 }
 
 function deleteTodo(id) {
-  const todos = getTodos().filter(t => t.id !== id);
-  saveTodos(todos);
+  const todos = getTodos();
+  const t = todos.find(t => String(t.id) === String(id));
+  if(t) syncTodoDelete(t.sb_id || t.id);
+  saveTodos(todos.filter(t => String(t.id) !== String(id)));
   renderTodos();
 }
 
@@ -1646,9 +1651,206 @@ function renderTodayChecks() {
 function toggleCheck(id) {
   const log = getTodayLog();
   log[id] = !log[id];
+  log.savedAt = new Date().toISOString();
   saveTodayLog(log);
+  syncDailyLog(log, todayKey());
   renderTodayChecks();
 }
+// ── SUPABASE DATA LAYER ────────────────────────────────────────────────
+// All write functions push to Supabase + keep localStorage as cache/fallback
+
+async function sbUpsert(table, body, onConflict = '') {
+  const conflict = onConflict ? `&on_conflict=${onConflict}` : '';
+  const url = `${SUPABASE_URL}/rest/v1/${table}?apikey=${SUPABASE_KEY}${conflict}`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { ...sbWriteHeaders, 'Prefer': 'return=representation,resolution=merge-duplicates' },
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) { console.error('sbUpsert error:', await res.text()); return null; }
+  return res.json();
+}
+
+async function syncDailyLog(log, dateKey) {
+  try {
+    const payload = {
+      log_date: dateKey,
+      gym: !!log.gym, substack: !!log.substack, project: !!log.project,
+      skincare: !!log.skincare, class: !!log.class, nosmoke: !!log.nosmoke,
+      sleep_time: log.sleepTime || null, wake_time: log.wakeTime || null,
+      intention: log.intention || null, auto_saved: !!log.autoSaved,
+      saved_at: log.savedAt || new Date().toISOString()
+    };
+    await sbUpsert('daily_logs', payload, 'log_date');
+  } catch(e) { console.warn('Daily log sync failed, saved locally:', e.message); }
+}
+
+async function syncWorkout(entry) {
+  try {
+    const payload = {
+      workout_date: entry.date.split('T')[0],
+      type: entry.type,
+      gym_type: entry.gymType || null,
+      duration: entry.duration ? parseInt(entry.duration) : null,
+      distance: entry.dist || null,
+      run_time: entry.time || null,
+      run_type: entry.runType || null,
+      notes: entry.notes || null
+    };
+    await sbPost('workouts', payload);
+  } catch(e) { console.warn('Workout sync failed:', e.message); }
+}
+
+async function syncStudySession(entry) {
+  try {
+    const payload = {
+      session_date: entry.date.split('T')[0],
+      type: entry.type, subject: entry.subject,
+      hours: entry.hours || null, notes: entry.notes || null
+    };
+    await sbPost('study_sessions', payload);
+  } catch(e) { console.warn('Study sync failed:', e.message); }
+}
+
+async function syncProjectLog(entry, project) {
+  try {
+    const payload = {
+      log_date: entry.date.split('T')[0], project,
+      hours: entry.hours || null, task: entry.task || null, status: entry.status || null
+    };
+    await sbPost('project_logs', payload);
+  } catch(e) { console.warn('Project sync failed:', e.message); }
+}
+
+async function syncWeight(entry) {
+  try {
+    await sbPost('weight_logs', { log_date: entry.date, weight: entry.weight, feel: entry.feel });
+  } catch(e) { console.warn('Weight sync failed:', e.message); }
+}
+
+async function syncWeeklyReview(entry, scores) {
+  try {
+    const payload = {
+      week_start: entry.weekStart, score: entry.score,
+      fitness_score: scores.fitnessScore, academics_score: scores.academicsScore,
+      marketing_score: scores.marketingScore, health_score: scores.healthScore,
+      worked: entry.worked || null, fix: entry.fix || null, focus: entry.focus || null
+    };
+    await sbUpsert('weekly_reviews', payload, 'week_start');
+  } catch(e) { console.warn('Review sync failed:', e.message); }
+}
+
+async function syncTodoAdd(todo) {
+  try {
+    const result = await sbPost('todos', { text: todo.text, bucket: todo.bucket, done: false });
+    return result && result[0] ? result[0].id : null;
+  } catch(e) { console.warn('Todo sync failed:', e.message); return null; }
+}
+
+async function syncTodoUpdate(sbId, done) {
+  try {
+    if(!sbId) return;
+    const url = `${SUPABASE_URL}/rest/v1/todos?id=eq.${sbId}&apikey=${SUPABASE_KEY}`;
+    await fetch(url, { method: 'PATCH', headers: sbWriteHeaders, body: JSON.stringify({ done }) });
+  } catch(e) { console.warn('Todo update sync failed:', e.message); }
+}
+
+async function syncTodoDelete(sbId) {
+  try {
+    if(!sbId) return;
+    await sbDelete('todos', `id=eq.${sbId}`);
+  } catch(e) { console.warn('Todo delete sync failed:', e.message); }
+}
+
+// Load all data from Supabase on startup, merge with localStorage
+async function loadAllFromSupabase() {
+  try {
+    const [logs, wkts, studies, projs, weights, reviews, todos, skinlogs] = await Promise.all([
+      sbGet('daily_logs', 'order=log_date.desc&limit=90'),
+      sbGet('workouts', 'order=workout_date.desc&limit=200'),
+      sbGet('study_sessions', 'order=session_date.desc&limit=200'),
+      sbGet('project_logs', 'order=log_date.desc&limit=200'),
+      sbGet('weight_logs', 'order=log_date.desc&limit=52'),
+      sbGet('weekly_reviews', 'order=week_start.desc&limit=52'),
+      sbGet('todos', 'order=created_at.desc'),
+      sbGet('skincare_logs', 'order=log_date.desc&limit=90'),
+    ]);
+
+    // Merge daily logs into localStorage
+    logs.forEach(l => {
+      const existing = load('log_' + l.log_date, {});
+      const merged = {
+        ...existing,
+        gym: l.gym, substack: l.substack, project: l.project,
+        skincare: l.skincare, class: l.class, nosmoke: l.nosmoke,
+        sleepTime: l.sleep_time || existing.sleepTime,
+        wakeTime: l.wake_time || existing.wakeTime,
+        intention: l.intention || existing.intention,
+        savedAt: l.saved_at || existing.savedAt,
+      };
+      save('log_' + l.log_date, merged);
+    });
+
+    // Workouts
+    const wkFormatted = wkts.map(w => ({
+      date: w.workout_date + 'T00:00:00',
+      type: w.type, gymType: w.gym_type, duration: w.duration,
+      dist: w.distance, time: w.run_time, runType: w.run_type, notes: w.notes,
+      sb_id: w.id
+    }));
+    save('workouts', wkFormatted);
+
+    // Study sessions
+    const ssFormatted = studies.map(s => ({
+      date: s.session_date + 'T00:00:00', type: s.type,
+      subject: s.subject, hours: s.hours, notes: s.notes, sb_id: s.id
+    }));
+    save('study_sessions', ssFormatted);
+
+    // Project logs
+    const bfLogs = projs.filter(p => p.project === 'barefoot').map(p => ({
+      date: p.log_date + 'T00:00:00', hours: p.hours, task: p.task, status: p.status, sb_id: p.id
+    }));
+    const csLogs = projs.filter(p => p.project === 'cansupport').map(p => ({
+      date: p.log_date + 'T00:00:00', hours: p.hours, task: p.task, status: p.status, sb_id: p.id
+    }));
+    save('barefoot_log', bfLogs);
+    save('cansupport_log', csLogs);
+
+    // Weights
+    const wgFormatted = weights.map(w => ({ date: w.log_date, weight: w.weight, feel: w.feel, sb_id: w.id }));
+    save('weights', wgFormatted);
+
+    // Weekly reviews
+    const rvFormatted = reviews.map(r => ({
+      weekStart: r.week_start, score: r.score, worked: r.worked,
+      fix: r.fix, focus: r.focus, savedAt: r.created_at, sb_id: r.id
+    }));
+    save('weekly_reviews', rvFormatted);
+
+    // Todos — store with sb_id for update/delete
+    const tdFormatted = todos.map(t => ({
+      id: t.id, sb_id: t.id, text: t.text, bucket: t.bucket, done: t.done,
+      created: t.created_at
+    }));
+    save('todos', tdFormatted);
+
+    // Skincare logs
+    skinlogs.forEach(s => {
+      save('skin_' + s.log_date, {
+        am1: s.am1, am2: s.am2, am3: s.am3, am4: s.am4,
+        pm1: s.pm1, pm2: s.pm2, pm3: s.pm3
+      });
+    });
+
+    console.log('✓ All data synced from Supabase');
+    return true;
+  } catch(e) {
+    console.warn('Full sync failed, using localStorage:', e.message);
+    return false;
+  }
+}
+
 function autoSaveField(field, value) {
   const log = getTodayLog();
   log[field] = value;
@@ -1666,6 +1868,7 @@ function saveToday() {
   if(ii) log.intention = ii.value;
   log.savedAt = new Date().toISOString();
   saveTodayLog(log);
+  syncDailyLog(log, todayKey()); // sync to Supabase
   toast('Today saved ✓');
   updateSmokeStreak();
 }
@@ -2286,6 +2489,7 @@ function logWorkout() {
   }
   workouts.unshift(entry);
   save('workouts', workouts);
+  syncWorkout(entry); // sync to Supabase
   // also tick today's gym check
   if(currentWorkout!=='run'){
     const log=getTodayLog(); log.gym=true; saveTodayLog(log);
@@ -2347,6 +2551,7 @@ function logStudy() {
   if(!entry.subject){ toast('Add a subject'); return; }
   sessions.unshift(entry);
   save('study_sessions', sessions);
+  syncStudySession(entry); // sync to Supabase
   document.getElementById('study-subject').value='';
   document.getElementById('study-hours').value='';
   document.getElementById('study-notes').value='';
@@ -2368,6 +2573,7 @@ function logProject(proj) {
   if(!entry.task){ toast('Add what you worked on'); return; }
   entries.unshift(entry);
   save(key, entries);
+  syncProjectLog(entry, proj); // sync to Supabase
   hoursEl.value=''; taskEl.value='';
   toast((proj==='barefoot'?'Barefoot':'Can Support')+' logged ✓');
   renderAcademics();
@@ -2448,6 +2654,7 @@ function logWeight() {
   const weights = load('weights', []);
   weights.unshift({ date: todayKey(), weight: w, feel });
   save('weights', weights);
+  syncWeight({ date: todayKey(), weight: w, feel }); // sync to Supabase
   document.getElementById('weight-input').value='';
   toast('Check-in saved ✓');
   renderHealth();
@@ -2547,20 +2754,23 @@ function renderReview() {
   }
 }
 function saveWeeklyReview() {
-  const sc=calcWeekScore();
-  const reviews=load('weekly_reviews',[]);
-  reviews.unshift({
+  const sc = calcWeekScore();
+  const reviews = load('weekly_reviews',[]);
+  const entry = {
     weekStart: getWeekDays()[0],
     score: sc.total,
     worked: document.getElementById('review-worked').value,
     fix: document.getElementById('review-fix').value,
     focus: document.getElementById('review-focus').value,
     savedAt: new Date().toISOString(),
-  });
-  save('weekly_reviews',reviews);
-  document.getElementById('review-worked').value='';
-  document.getElementById('review-fix').value='';
-  document.getElementById('review-focus').value='';
+  };
+  const existing = reviews.findIndex(r => r.weekStart === entry.weekStart);
+  if(existing >= 0) reviews[existing] = entry; else reviews.unshift(entry);
+  save('weekly_reviews', reviews);
+  syncWeeklyReview(entry, sc); // sync to Supabase
+  document.getElementById('review-worked').value = '';
+  document.getElementById('review-fix').value = '';
+  document.getElementById('review-focus').value = '';
   toast('Week review saved ✓');
   renderReview();
 }
@@ -2594,8 +2804,24 @@ function handleImport(e) {
   reader.readAsText(file);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  renderHome();
+document.addEventListener('DOMContentLoaded', async () => {
+  // Load all data from Supabase first, then render
+  renderHome(); // render immediately from localStorage
+  loadAllFromSupabase().then(synced => {
+    if(synced) {
+      // Re-render active screen with fresh data
+      const active = document.querySelector('.screen.active');
+      if(active) {
+        const name = active.id.replace('screen-', '');
+        if(name === 'home') renderHome();
+        else if(name === 'fitness') renderFitness();
+        else if(name === 'academics') renderAcademics();
+        else if(name === 'health') renderHealth();
+        else if(name === 'review') renderReview();
+        else if(name === 'todo') renderTodos();
+      }
+    }
+  });
 
   // ── MIDNIGHT AUTO-SAVE + DAY REFRESH ──────────────────────────────
   function msUntil(h, m) {
@@ -2606,20 +2832,19 @@ document.addEventListener('DOMContentLoaded', () => {
     return target - now;
   }
 
-  // Auto-save at 11:59pm
   setTimeout(function autoSave() {
     const log = getTodayLog();
     log.savedAt = new Date().toISOString();
     log.autoSaved = true;
     saveTodayLog(log);
+    syncDailyLog(log, todayKey());
     toast('Day auto-saved ✓');
     setTimeout(autoSave, 24 * 60 * 60 * 1000);
   }, msUntil(23, 59));
 
-  // Refresh home at midnight so the date flips and a new day starts
   setTimeout(function midnightRefresh() {
     const activeScreen = document.querySelector('.screen.active');
-    if (activeScreen && activeScreen.id === 'screen-home') renderHome();
+    if(activeScreen && activeScreen.id === 'screen-home') renderHome();
     toast('New day started 🌅');
     setTimeout(midnightRefresh, 24 * 60 * 60 * 1000);
   }, msUntil(0, 0));
