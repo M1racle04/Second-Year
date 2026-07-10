@@ -1072,69 +1072,97 @@ select option { background: var(--bg3); }
 <div class="screen" id="screen-marketing">
   <div class="sec-label">Marketing Brain</div>
 
+  <!-- Streak + stats bar -->
+  <div class="streak-strip" style="margin-bottom:12px;">
+    <div class="streak-tile">
+      <div class="streak-tile-icon">🔥</div>
+      <div class="streak-tile-val amber" id="sb-streak-val">0</div>
+      <div class="streak-tile-lbl">day streak</div>
+    </div>
+    <div class="streak-tile">
+      <div class="streak-tile-icon">📖</div>
+      <div class="streak-tile-val green" id="sb-week-val">0</div>
+      <div class="streak-tile-lbl">this week</div>
+    </div>
+    <div class="streak-tile">
+      <div class="streak-tile-icon">📚</div>
+      <div class="streak-tile-val amber" id="sb-total-val">0</div>
+      <div class="streak-tile-lbl">total reads</div>
+    </div>
+  </div>
+
+  <!-- Search + filter -->
+  <div class="card" style="padding:12px 14px;">
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <input type="text" id="sb-search" placeholder="Search substacks..." oninput="filterSubstacks()" style="flex:1;">
+    </div>
+    <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;" id="sb-cat-filters">
+      <button class="tag selected" onclick="setCatFilter('all',this)" style="white-space:nowrap;">All</button>
+      <button class="tag" onclick="setCatFilter('Marketing Strategy',this)" style="white-space:nowrap;">Marketing</button>
+      <button class="tag" onclick="setCatFilter('Brand Strategy',this)" style="white-space:nowrap;">Brand</button>
+      <button class="tag" onclick="setCatFilter('Mindset & Growth',this)" style="white-space:nowrap;">Mindset</button>
+      <button class="tag" onclick="setCatFilter('Life & Identity',this)" style="white-space:nowrap;">Life</button>
+      <button class="tag" onclick="setCatFilter('Career & Business',this)" style="white-space:nowrap;">Career</button>
+      <button class="tag" onclick="setCatFilter('Politics & World',this)" style="white-space:nowrap;">Politics</button>
+      <button class="tag" onclick="setCatFilter('Product & Growth',this)" style="white-space:nowrap;">Product</button>
+      <button class="tag" onclick="setCatFilter('Business Strategy',this)" style="white-space:nowrap;">Strategy</button>
+    </div>
+  </div>
+
+  <!-- Substack list -->
   <div class="card">
     <div class="card-head">
-      <div class="card-icon" style="background:rgba(155,127,212,0.1);">🧠</div>
-      <div><div class="card-title">Log reading</div><div class="card-sub">Substacks · Frameworks · Insights</div></div>
+      <div class="card-icon" style="background:rgba(155,127,212,0.1);">📋</div>
+      <div><div class="card-title">Reading list</div><div class="card-sub" id="sb-list-count">Loading...</div></div>
+      <div id="sb-sync-status" style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-left:auto;">⏳</div>
+    </div>
+    <div id="sb-list">
+      <div style="color:var(--text3);font-size:12px;padding:16px 0;text-align:center;">Loading your substacks...</div>
+    </div>
+  </div>
+
+  <!-- Add new substack -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-icon" style="background:rgba(74,190,170,0.1);">➕</div>
+      <div><div class="card-title">Add new substack</div></div>
     </div>
     <div class="field-row">
-      <div class="field-label">Source</div>
-      <select id="reading-source">
-        <option value="substack">Substack</option>
-        <option value="book">Book</option>
-        <option value="article">Article</option>
-        <option value="podcast">Podcast / Video</option>
-        <option value="case">Marketing case</option>
-        <option value="framework">Framework study</option>
+      <div class="field-label">Name</div>
+      <input type="text" id="new-sb-name" placeholder="Newsletter / article name">
+    </div>
+    <div class="field-row">
+      <div class="field-label">Author</div>
+      <input type="text" id="new-sb-author" placeholder="Author or publication">
+    </div>
+    <div class="field-row">
+      <div class="field-label">Category</div>
+      <select id="new-sb-cat">
+        <option value="Marketing Strategy">Marketing Strategy</option>
+        <option value="Brand Strategy">Brand Strategy</option>
+        <option value="Product & Growth">Product & Growth</option>
+        <option value="Business Strategy">Business Strategy</option>
+        <option value="Career & Business">Career & Business</option>
+        <option value="Mindset & Growth">Mindset & Growth</option>
+        <option value="Life & Identity">Life & Identity</option>
+        <option value="Politics & World">Politics & World</option>
+        <option value="Productivity">Productivity</option>
+        <option value="Technology">Technology</option>
+        <option value="Other">Other</option>
       </select>
     </div>
-    <div class="field-row">
-      <div class="field-label">Title</div>
-      <input type="text" id="reading-title" placeholder="Article / post title or author">
-    </div>
-    <div class="field-row">
-      <div class="field-label">Key insight</div>
-      <textarea id="reading-insight" placeholder="The one thing you'll remember from this..."></textarea>
-    </div>
-    <div class="sec-label" style="margin-top:4px;">Tags</div>
-    <div class="tag-wrap" id="marketing-tags">
-      <div class="tag" onclick="selectTag(this,'marketing-tags')">Brand</div>
-      <div class="tag" onclick="selectTag(this,'marketing-tags')">Digital</div>
-      <div class="tag" onclick="selectTag(this,'marketing-tags')">B2B</div>
-      <div class="tag" onclick="selectTag(this,'marketing-tags')">Consumer</div>
-      <div class="tag" onclick="selectTag(this,'marketing-tags')">Strategy</div>
-      <div class="tag" onclick="selectTag(this,'marketing-tags')">GTM</div>
-      <div class="tag" onclick="selectTag(this,'marketing-tags')">Pricing</div>
-      <div class="tag" onclick="selectTag(this,'marketing-tags')">Growth</div>
-    </div>
-    <button class="btn" onclick="logReading()">Log reading</button>
+    <button class="btn" onclick="addNewSubstack()">Add to list</button>
   </div>
 
+  <!-- Recent reads log -->
   <div class="card">
     <div class="card-head">
-      <div class="card-icon" style="background:rgba(232,213,163,0.1);">🔥</div>
-      <div>
-        <div class="card-title">Reading streak</div>
-        <div class="card-sub">Consistency is the goal</div>
-      </div>
-      <div class="streak-badge" style="margin-left:auto;" id="reading-streak-badge">0 🔥</div>
+      <div class="card-icon" style="background:rgba(91,155,213,0.1);">🕐</div>
+      <div><div class="card-title">Recent reads</div></div>
     </div>
-    <div class="prog-wrap">
-      <div class="prog-label"><span>This week</span><span id="reading-week-count">0/7 days</span></div>
-      <div class="prog-bar"><div class="prog-fill purple" id="reading-week-fill" style="width:0%"></div></div>
+    <div id="sb-recent-reads">
+      <div style="color:var(--text3);font-size:12px;padding:8px 0;">No reads logged yet.</div>
     </div>
-    <div class="prog-wrap">
-      <div class="prog-label"><span>This month</span><span id="reading-month-count">0 reads</span></div>
-      <div class="prog-bar"><div class="prog-fill blue" id="reading-month-fill" style="width:0%"></div></div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-head">
-      <div class="card-icon" style="background:rgba(91,155,213,0.1);">📝</div>
-      <div><div class="card-title">Reading log</div></div>
-    </div>
-    <div id="reading-log"></div>
   </div>
 </div>
 
@@ -1717,6 +1745,244 @@ function renderWeekStatsHome() {
   </div>`;
 }
 
+// ── SUPABASE CONFIG ────────────────────────────────────────────────────
+const SUPABASE_URL = 'https://utntpurzuditnrkdiskb.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV0bnRwdXJ6dWRpdG5ya2Rpc2tiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NTg0MTAsImV4cCI6MjA5OTIzNDQxMH0.oZihpBPRrY2lmf5pxJo0anVldDup86541II76m0zAP4';
+
+const sbHeaders = {
+  'apikey': SUPABASE_KEY,
+  'Authorization': 'Bearer ' + SUPABASE_KEY,
+  'Content-Type': 'application/json',
+  'Prefer': 'return=representation'
+};
+
+async function sbGet(table, params = '') {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, { headers: sbHeaders });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+async function sbPost(table, body) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+    method: 'POST', headers: sbHeaders, body: JSON.stringify(body)
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+async function sbDelete(table, filter) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${filter}`, {
+    method: 'DELETE', headers: { ...sbHeaders, 'Prefer': 'return=minimal' }
+  });
+  if (!res.ok) throw new Error(await res.text());
+}
+
+// ── SUBSTACK ENGINE ────────────────────────────────────────────────────
+let allSubstacks = [];
+let allReads = [];
+let activeCatFilter = 'all';
+
+function setSyncStatus(msg) {
+  const el = document.getElementById('sb-sync-status');
+  if(el) el.textContent = msg;
+}
+
+async function loadSubstacks() {
+  try {
+    setSyncStatus('⏳ syncing');
+    allSubstacks = await sbGet('substack_subscriptions', 'active=eq.true&order=category.asc,name.asc');
+    allReads = await sbGet('substack_reads', 'order=created_at.desc&limit=200');
+    setSyncStatus('✓ synced');
+    renderSubstackList();
+    renderSubstackStats();
+    renderRecentReads();
+  } catch(e) {
+    setSyncStatus('⚠ offline');
+    console.error('Supabase error:', e);
+    // fallback to localStorage cache
+    const cached = load('sb_cache_subs', []);
+    const cachedReads = load('sb_cache_reads', []);
+    if(cached.length) { allSubstacks = cached; allReads = cachedReads; renderSubstackList(); renderSubstackStats(); renderRecentReads(); }
+  }
+}
+
+function todayStr() { return new Date().toISOString().split('T')[0]; }
+
+function isReadToday(subId) {
+  return allReads.some(r => r.subscription_id === subId && r.read_date === todayStr());
+}
+
+function isReadThisWeek(subId) {
+  const days = getWeekDays();
+  return allReads.some(r => r.subscription_id === subId && days.includes(r.read_date));
+}
+
+function getReadCount(subId) {
+  return allReads.filter(r => r.subscription_id === subId).length;
+}
+
+async function toggleRead(subId, subName) {
+  const readToday = isReadToday(subId);
+  try {
+    if(readToday) {
+      // unmark — delete today's read
+      const existing = allReads.find(r => r.subscription_id === subId && r.read_date === todayStr());
+      if(existing) {
+        await sbDelete('substack_reads', `id=eq.${existing.id}`);
+        allReads = allReads.filter(r => r.id !== existing.id);
+      }
+      toast('Unmarked as read');
+    } else {
+      // mark as read
+      const newRead = await sbPost('substack_reads', {
+        subscription_id: subId,
+        title: subName,
+        read_date: todayStr()
+      });
+      if(newRead && newRead[0]) allReads.unshift(newRead[0]);
+      // also tick today's log
+      const log = getTodayLog(); log.substack = true; saveTodayLog(log);
+      toast('Marked as read ✓');
+    }
+    // cache locally
+    save('sb_cache_reads', allReads);
+    renderSubstackList();
+    renderSubstackStats();
+    renderRecentReads();
+    updateSmokeStreak();
+  } catch(e) {
+    toast('Error — check connection');
+    console.error(e);
+  }
+}
+
+async function addNewSubstack() {
+  const name = document.getElementById('new-sb-name').value.trim();
+  const author = document.getElementById('new-sb-author').value.trim();
+  const cat = document.getElementById('new-sb-cat').value;
+  if(!name) { toast('Enter a name'); return; }
+  try {
+    const result = await sbPost('substack_subscriptions', { name, author, category: cat, url: 'substack.com', active: true });
+    if(result && result[0]) allSubstacks.push(result[0]);
+    save('sb_cache_subs', allSubstacks);
+    document.getElementById('new-sb-name').value = '';
+    document.getElementById('new-sb-author').value = '';
+    toast('Added ✓');
+    renderSubstackList();
+  } catch(e) {
+    toast('Error adding — check connection');
+    console.error(e);
+  }
+}
+
+function setCatFilter(cat, btn) {
+  activeCatFilter = cat;
+  document.querySelectorAll('#sb-cat-filters .tag').forEach(t => t.classList.remove('selected'));
+  btn.classList.add('selected');
+  renderSubstackList();
+}
+
+function filterSubstacks() { renderSubstackList(); }
+
+function renderSubstackList() {
+  const el = document.getElementById('sb-list');
+  const countEl = document.getElementById('sb-list-count');
+  if(!el) return;
+
+  const query = (document.getElementById('sb-search')?.value || '').toLowerCase();
+  let filtered = allSubstacks.filter(s => {
+    const matchCat = activeCatFilter === 'all' || s.category === activeCatFilter;
+    const matchQ = !query || s.name.toLowerCase().includes(query) || (s.author||'').toLowerCase().includes(query);
+    return matchCat && matchQ;
+  });
+
+  if(countEl) countEl.textContent = `${filtered.length} substacks · ${allReads.filter(r=>r.read_date===todayStr()).length} read today`;
+
+  if(!filtered.length) {
+    el.innerHTML = '<div style="color:var(--text3);font-size:12px;padding:16px 0;text-align:center;">No substacks match your filter.</div>';
+    return;
+  }
+
+  // Group by category
+  const groups = {};
+  filtered.forEach(s => {
+    if(!groups[s.category]) groups[s.category] = [];
+    groups[s.category].push(s);
+  });
+
+  let html = '';
+  Object.entries(groups).sort().forEach(([cat, subs]) => {
+    html += `<div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;padding:12px 0 6px;border-bottom:1px solid var(--border);margin-bottom:4px;">${cat}</div>`;
+    subs.forEach(s => {
+      const doneToday = isReadToday(s.id);
+      const doneWeek = isReadThisWeek(s.id);
+      const count = getReadCount(s.id);
+      html += `
+        <div class="check-row" onclick="toggleRead('${s.id}','${s.name.replace(/'/g,"\\'")}')">
+          <div style="flex:1;">
+            <div class="check-label ${doneToday?'done':''}" style="font-size:13px;">${s.name}</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:1px;font-family:var(--font-mono);">${s.author||''}${count > 0 ? ` · ${count}× read` : ''}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            ${doneWeek && !doneToday ? '<div style="width:6px;height:6px;border-radius:50%;background:var(--accent2);opacity:0.5;"></div>' : ''}
+            <div class="checkbox ${doneToday?'checked':''}">${doneToday?'✓':''}</div>
+          </div>
+        </div>`;
+    });
+  });
+  el.innerHTML = html;
+}
+
+function renderSubstackStats() {
+  // streak
+  let streak = 0;
+  const today = new Date();
+  for(let i = 0; i < 90; i++) {
+    const d = new Date(today); d.setDate(today.getDate()-i);
+    const key = d.toISOString().split('T')[0];
+    if(allReads.some(r => r.read_date === key)) streak++;
+    else if(i > 0) break;
+  }
+  const days = getWeekDays();
+  const weekReads = allReads.filter(r => days.includes(r.read_date));
+  const weekDays = new Set(weekReads.map(r => r.read_date)).size;
+
+  const streakEl = document.getElementById('sb-streak-val');
+  const weekEl   = document.getElementById('sb-week-val');
+  const totalEl  = document.getElementById('sb-total-val');
+  if(streakEl) streakEl.textContent = streak;
+  if(weekEl)   weekEl.textContent   = weekDays;
+  if(totalEl)  totalEl.textContent  = allReads.length;
+
+  // also update home streak strip
+  const readingEl = document.getElementById('reading-streak-val');
+  if(readingEl) readingEl.textContent = streak;
+}
+
+function renderRecentReads() {
+  const el = document.getElementById('sb-recent-reads');
+  if(!el) return;
+  const recent = allReads.slice(0, 15);
+  if(!recent.length) { el.innerHTML = '<div style="color:var(--text3);font-size:12px;padding:8px 0;">No reads logged yet. Tick a substack above!</div>'; return; }
+  // group by date
+  const byDate = {};
+  recent.forEach(r => {
+    if(!byDate[r.read_date]) byDate[r.read_date] = [];
+    byDate[r.read_date].push(r);
+  });
+  let html = '';
+  Object.entries(byDate).sort((a,b) => b[0].localeCompare(a[0])).forEach(([date, reads]) => {
+    html += `<div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);padding:8px 0 4px;">${fmtDate(date)}</div>`;
+    reads.forEach(r => {
+      const sub = allSubstacks.find(s => s.id === r.subscription_id);
+      html += `<div style="padding:5px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text2);">${sub?.name || r.title || 'Unknown'}<span style="color:var(--text3);font-size:10px;font-family:var(--font-mono);"> · ${sub?.category||''}</span></div>`;
+    });
+  });
+  el.innerHTML = html;
+}
+
+function renderMarketing() {
+  loadSubstacks();
+}
+
 // ── MONTH CALENDAR ──────────────────────────────────────────────────────
 function renderMonthCalendar() {
   const now = new Date();
@@ -2140,11 +2406,8 @@ function renderAcademics() {
   }
 }
 
-// ── MARKETING ──────────────────────────────────────────────────────────
-function logReading() {
-  const reads = load('readings', []);
-  const titleEl = document.getElementById('reading-title');
-  const insightEl = document.getElementById('reading-insight');
+// ── HEALTH ──────────────────────────────────────────────────────────────
+function selectSkinTogglonst insightEl = document.getElementById('reading-insight');
   const sourceEl = document.getElementById('reading-source');
   const selectedTags = [...document.querySelectorAll('#marketing-tags .tag.selected')].map(t=>t.textContent);
   if(!titleEl.value){ toast('Add a title'); return; }
